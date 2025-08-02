@@ -14,11 +14,21 @@ from app.auth.dependencies import verify_token  # 이 경로는 실제 구조에
 from app.db.crud import get_user_by_email, verify_password
 from app.auth.auth import create_access_token
 from app.db.schemas import UserCreate, UserOut, UserLogin, TokenOut
+from fastapi.middleware.cors import CORSMiddleware
 
 
 app = FastAPI()
 
 Base.metadata.create_all(bind=engine)
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # 프론트 도메인 명확히 넣기
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.post("/register", response_model=UserOut)
 def register_user(user: UserCreate, db: Session = Depends(get_db)):
