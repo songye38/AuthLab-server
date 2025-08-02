@@ -3,7 +3,7 @@
 # 이 파일은 서버를 실행할 때 가장 먼저 실행되는 파일입니다.
 
 
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException,Response
 from sqlalchemy.orm import Session
 from app.db.database import engine, get_db
 from app.db.models import Base
@@ -15,7 +15,7 @@ from app.db.crud import get_user_by_email, verify_password
 from app.auth.auth import create_access_token
 from app.db.schemas import UserCreate, UserOut, UserLogin, TokenOut
 from fastapi.middleware.cors import CORSMiddleware
-
+from app.auth.auth import ACCESS_TOKEN_EXPIRE_MINUTES
 
 app = FastAPI()
 
@@ -25,7 +25,7 @@ Base.metadata.create_all(bind=engine)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],  # 프론트 도메인 명확히 넣기
-    allow_credentials=True,
+    allow_credentials=True,  # 이게 핵심!
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -46,7 +46,7 @@ async def protected_route(user_id: str = Depends(verify_token)):
 
 
 @app.post("/login", response_model=TokenOut)
-async def login(user: UserLogin, db: Session = Depends(get_db)):
+async def login(user: UserLogin, response: Response, db: Session = Depends(get_db)):
     db_user = get_user_by_email(db, user.email)
     if not db_user:
         raise HTTPException(status_code=400, detail="이메일 또는 비밀번호가 틀렸습니다.")
@@ -54,4 +54,16 @@ async def login(user: UserLogin, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="이메일 또는 비밀번호가 틀렸습니다.")
 
     access_token = create_access_token(data={"sub": str(db_user.id)})
-    return {"access_token": access_token, "token_type": "bearer"}
+
+    # 쿠키에 토큰 세팅
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        secure=False,  # HTTPS면 True로 바꿔야 함
+        samesite="lax",
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+    )
+
+    # JSON 응답도 원하면 이렇게
+    return {"message": "로그인 성공"}
