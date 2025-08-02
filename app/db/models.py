@@ -1,5 +1,12 @@
+
+# sqlalchemy 모델 정의
+# 이 파일은 데이터베이스 테이블 구조를 정의합니다.
+
+
+
+
 from sqlalchemy import Column, Integer, String
-from database import Base
+from app.db.database import Base
 
 class User(Base):
     __tablename__ = "users"
