@@ -8,7 +8,3 @@ async def blacklist_token(token: str, expire_seconds: int):
     # 토큰을 블랙리스트에 추가, expire_seconds 후 자동 삭제
     await redis.set(token, "blacklisted", ex=expire_seconds)
 
-async def is_token_blacklisted(token: str) -> bool:
-    # 토큰이 블랙리스트에 있는지 확인
-    value = await redis.get(token)
-    return value == "blacklisted"

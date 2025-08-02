@@ -2,8 +2,7 @@ from fastapi import Depends, Header
 from app.auth.auth import verify_access_token
 from fastapi import Depends, HTTPException, status, Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from app.auth.auth import verify_access_token
-from app.auth.auth import is_token_blacklisted
+from app.auth.auth import verify_access_token, is_token_blacklisted
 
 
 

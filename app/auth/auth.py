@@ -9,7 +9,8 @@ import os
 import jwt
 from datetime import datetime, timedelta
 from fastapi import HTTPException, status
-from app.auth.dependencies import is_token_blacklisted  # 이 파일 위치에 맞게 import 경로 조정해줘
+import redis
+
 
 
 load_dotenv()  # 이거 꼭 해줘야 함
@@ -37,3 +38,9 @@ def verify_access_token(token: str):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
     except jwt.PyJWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+    
+
+async def is_token_blacklisted(token: str) -> bool:
+    # 토큰이 블랙리스트에 있는지 확인
+    value = await redis.get(token)
+    return value == "blacklisted"
