@@ -2,12 +2,13 @@
 # 이 파일은 JWT 토큰을 생성하고 검증하는 기능을 제공합니다.     
 # FastAPI에서 인증 및 권한 부여를 구현할 때 사용됩니다.
 
+
 from dotenv import load_dotenv
 import os
 import jwt as pyjwt
 from datetime import datetime, timedelta
 from fastapi import HTTPException, status
-import redis
+import app.redis.redis_client as redis_client
 
 load_dotenv()  # 이거 꼭 해줘야 함
 
@@ -42,5 +43,6 @@ def verify_access_token(token: str):
 
  # 토큰이 블랙리스트에 있는지 확인
 async def is_token_blacklisted(token: str) -> bool:
-    value = await redis.get(token)
-    return value == "blacklisted"
+    value = await redis_client.get(token)
+    return value == b"blacklisted"  # Redis에서 가져온 값은 bytes일 수 있음
+
