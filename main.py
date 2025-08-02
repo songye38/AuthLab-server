@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from sqlalchemy import text
-from app.database import engine
+from database import engine
 
 app = FastAPI()
 
