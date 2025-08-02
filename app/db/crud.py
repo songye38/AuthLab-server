@@ -26,7 +26,7 @@ def create_user(db: Session, email: str, password: str):
     return db_user
 
 
-# 사용자 조회 함수
+# 사용자 조회 함수 추가
 def get_user_by_email(db: Session, email: str):
     return db.query(models.User).filter(models.User.email == email).first()
 
