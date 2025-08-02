@@ -9,6 +9,7 @@ import os
 import jwt
 from datetime import datetime, timedelta
 from fastapi import HTTPException, status
+from app.auth.dependencies import is_token_blacklisted  # 이 파일 위치에 맞게 import 경로 조정해줘
 
 
 load_dotenv()  # 이거 꼭 해줘야 함
