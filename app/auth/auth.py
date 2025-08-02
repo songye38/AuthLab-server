@@ -4,7 +4,7 @@
 
 from dotenv import load_dotenv
 import os
-import jwt
+import jwt as pyjwt
 from datetime import datetime, timedelta
 from fastapi import HTTPException, status
 import redis
