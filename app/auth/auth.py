@@ -8,14 +8,13 @@ import os
 import jwt
 from datetime import datetime, timedelta
 from fastapi import HTTPException, status
-import app.redis.redis_client as redis_client
+from app.redis import redis_client
 
 load_dotenv()  # 이거 꼭 해줘야 함
 
 SECRET_KEY = os.getenv("SECRET_KEY")  # 이건 .env에 설정하거나 Railway에 입력
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30  # 30분 유효
-
 
 
 # JWT 토큰 생성 함수
