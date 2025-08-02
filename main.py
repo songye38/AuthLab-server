@@ -11,6 +11,10 @@ from app.db.schemas import UserCreate, UserOut
 from app.db.crud import create_user
 import app.db.models as models
 from app.auth.dependencies import verify_token  # 이 경로는 실제 구조에 맞게 조정
+from app.db.crud import get_user_by_email, verify_password
+from app.auth.auth import create_access_token
+from app.db.schemas import UserCreate, UserOut, UserLogin, TokenOut
+
 
 app = FastAPI()
 
@@ -29,3 +33,15 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
 @app.get("/protected")
 async def protected_route(user_id: str = Depends(verify_token)):
     return {"message": f"안녕하세요, {user_id}님! 인증된 사용자입니다."}
+
+
+@app.post("/login", response_model=TokenOut)
+async def login(user: UserLogin, db: Session = Depends(get_db)):
+    db_user = get_user_by_email(db, user.email)
+    if not db_user:
+        raise HTTPException(status_code=400, detail="이메일 또는 비밀번호가 틀렸습니다.")
+    if not verify_password(user.password, db_user.hashed_password):
+        raise HTTPException(status_code=400, detail="이메일 또는 비밀번호가 틀렸습니다.")
+
+    access_token = create_access_token(data={"sub": str(db_user.id)})
+    return {"access_token": access_token, "token_type": "bearer"}

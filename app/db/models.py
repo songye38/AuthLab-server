@@ -8,6 +8,8 @@
 from sqlalchemy import Column, Integer, String
 from app.db.database import Base
 
+
+# User 모델 정의
 class User(Base):
     __tablename__ = "users"
 
