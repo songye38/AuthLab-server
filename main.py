@@ -66,4 +66,4 @@ async def login(user: UserLogin, response: Response, db: Session = Depends(get_d
     )
 
     # JSON 응답도 원하면 이렇게
-    return {"message": "로그인 성공"}
+    return {"access_token": access_token, "token_type": "bearer"}
