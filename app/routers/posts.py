@@ -5,7 +5,11 @@ from app.db.schemas import PostCreate
 from app.auth.dependencies import get_current_user
 from app.db.database import get_db
 
-router = APIRouter(prefix="/posts", tags=["posts"])
+router = APIRouter(
+    prefix="/posts",
+    tags=["posts"],
+    redirect_slashes=False  # 이 옵션이 핵심!
+)
 
 
 @router.post("/", status_code=201)
