@@ -40,7 +40,12 @@ async def login(user: UserLogin, response: Response, db: Session = Depends(get_d
 
 @router.post("/logout")
 def logout(response: Response):
-    response.delete_cookie(key="access_token")  # 쿠키 삭제
+    response.delete_cookie(
+        key="access_token",
+        path="/",
+        samesite="none",  # 있어도 되고 없어도 됨 (delete에는 영향 적음)
+        secure=True
+    )
     return {"msg": "로그아웃 완료"}
 
 @router.get("/me")
