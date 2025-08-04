@@ -27,25 +27,29 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 from fastapi import Request
 
 def get_current_user(request: Request, db: Session = Depends(get_db)):
-    token = request.cookies.get("access_token")
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="인증 실패",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    token = request.cookies.get("access_token")  # ✅ 쿠키에서 꺼냄
+    print("서버가 받은 토큰:", token)  # 여기 꼭 찍어봐
     if not token:
-        raise HTTPException(status_code=401, detail="토큰이 없습니다.")
+        raise credentials_exception
 
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = payload.get("sub")
+        user_id: str = payload.get("sub")
         if user_id is None:
-            raise HTTPException(status_code=401, detail="토큰에 사용자 정보가 없습니다.")
-    except ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="토큰이 만료되었습니다.")
-    except InvalidTokenError:
-        raise HTTPException(status_code=401, detail="유효하지 않은 토큰입니다.")
-
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    
     user = db.query(models.User).filter(models.User.id == int(user_id)).first()
     if user is None:
-        raise HTTPException(status_code=401, detail="사용자가 존재하지 않습니다.")
+        raise credentials_exception
     return user
-
 
 
 
