@@ -20,12 +20,19 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 # 현재 사용자 정보를 가져오는 함수
 # 이 함수는 인증 헤더에서 토큰을 추출하고, 토큰을 검증하여 사용자 ID를 반환합니다.
 # 만약 토큰이 블랙리스트에 있다면 예외를 발생시킵니다.
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+from fastapi import Request
+
+def get_current_user(request: Request, db: Session = Depends(get_db)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="인증 실패",
         headers={"WWW-Authenticate": "Bearer"},
     )
+
+    token = request.cookies.get("access_token")  # ✅ 쿠키에서 꺼냄
+    if not token:
+        raise credentials_exception
+
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("sub")
@@ -38,6 +45,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     if user is None:
         raise credentials_exception
     return user
+
 
 
 
