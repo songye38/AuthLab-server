@@ -25,3 +25,7 @@ class UserLogin(BaseModel):
 class TokenOut(BaseModel):
     access_token: str
     token_type: str
+
+class PostCreate(BaseModel):
+    title: str
+    content: str

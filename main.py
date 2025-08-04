@@ -7,7 +7,7 @@ from fastapi import FastAPI, Depends, HTTPException,Response
 from sqlalchemy.orm import Session
 from app.db.database import engine, get_db
 from app.db.models import Base
-from app.db.schemas import UserCreate, UserOut
+from app.db.schemas import UserCreate, UserOut,PostCreate
 from app.db.crud import create_user
 import app.db.models as models
 from app.auth.dependencies import verify_token  # 이 경로는 실제 구조에 맞게 조정
@@ -77,3 +77,22 @@ def read_users_me(current_user: models.User = Depends(get_current_user)):
     if not current_user:
         raise HTTPException(status_code=401, detail="인증된 사용자가 없습니다")
     return {"email": current_user.email, "id": current_user.id}
+
+
+
+@app.post("/posts", status_code=201)
+def create_post(post: PostCreate, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    new_post = models.Post(
+        title=post.title,
+        content=post.content,
+        owner_id=current_user.id
+    )
+    db.add(new_post)
+    db.commit()
+    db.refresh(new_post)
+    return new_post
+
+@app.get("/posts/mine")
+def read_my_posts(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    posts = db.query(models.Post).filter(models.Post.owner_id == current_user.id).all()
+    return posts
