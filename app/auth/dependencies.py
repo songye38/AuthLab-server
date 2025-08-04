@@ -5,7 +5,8 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials,OAuth2Pass
 from app.auth.auth import verify_access_token, is_token_blacklisted
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
-from app.db.database import get_db,models
+from app.db.database import get_db
+import app.db.models as models
 from dotenv import load_dotenv
 import os
 load_dotenv()  # 이거 꼭 해줘야 함
