@@ -37,11 +37,11 @@ async def login(user: UserLogin, response: Response, db: Session = Depends(get_d
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
-@router.post("/logout", status_code=204)
-def logout(response: Response):
-    response.delete_cookie("access_token")
-    return
 
+@router.post("/logout")
+def logout(response: Response):
+    response.delete_cookie(key="access_token", path="/")
+    return {"msg": "로그아웃 완료"}
 
 @router.get("/me")
 def read_users_me(current_user: models.User = Depends(get_current_user)):
