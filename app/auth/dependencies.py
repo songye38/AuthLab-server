@@ -1,18 +1,43 @@
-from fastapi import Depends, Header
+from fastapi import Depends
 from app.auth.auth import verify_access_token
-from fastapi import Depends, HTTPException, status, Header
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials,OAuth2PasswordBearer
 from app.auth.auth import verify_access_token, is_token_blacklisted
+from jose import JWTError, jwt
+from sqlalchemy.orm import Session
+from app.db.database import get_db,models
+from dotenv import load_dotenv
+import os
+load_dotenv()  # 이거 꼭 해줘야 함
 
+SECRET_KEY = os.getenv("SECRET_KEY")  # 이건 .env에 설정하거나 Railway에 입력
+ALGORITHM = "HS256"
+
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 # 현재 사용자 정보를 가져오는 함수
 # 이 함수는 인증 헤더에서 토큰을 추출하고, 토큰을 검증하여 사용자 ID를 반환합니다.
 # 만약 토큰이 블랙리스트에 있다면 예외를 발생시킵니다.
-async def get_current_user(authorization: str = Header(...)):
-    token = authorization.split(" ")[1]  # Bearer 토큰에서 토큰만 분리
-    user_id = verify_access_token(token)
-    # 여기서 DB 조회해 user 정보 반환해도 됨
-    return user_id
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="인증 실패",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    
+    user = db.query(models.User).filter(models.User.id == int(user_id)).first()
+    if user is None:
+        raise credentials_exception
+    return user
+
 
 
 security = HTTPBearer()

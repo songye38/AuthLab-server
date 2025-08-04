@@ -1,3 +1,6 @@
+
+# 이 파일은 SQLAlchemy를 사용하여 데이터베이스와 상호작용합니다
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
@@ -12,6 +15,8 @@ engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
+
+#DB 세션을 만들어 주는 함수
 def get_db():
     db = SessionLocal()
     try:

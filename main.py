@@ -16,6 +16,7 @@ from app.auth.auth import create_access_token
 from app.db.schemas import UserCreate, UserOut, UserLogin, TokenOut
 from fastapi.middleware.cors import CORSMiddleware
 from app.auth.auth import ACCESS_TOKEN_EXPIRE_MINUTES
+from app.auth.dependencies import get_current_user
 
 app = FastAPI()
 
@@ -30,8 +31,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# 사용자 회원가입 처리 API 엔드포인트
 @app.post("/register", response_model=UserOut)
-def register_user(user: UserCreate, db: Session = Depends(get_db)):
+def register_user(user: UserCreate, db: Session = Depends(get_db)): #의존성 주입 방식
     # 이메일 중복 확인
     existing = db.query(models.User).filter(models.User.email == user.email).first()
     if existing:
@@ -45,7 +47,7 @@ async def protected_route(user_id: str = Depends(verify_token)):
     return {"message": f"안녕하세요, {user_id}님! 인증된 사용자입니다."}
 
 
-@app.post("/login", response_model=TokenOut)
+@app.post("/login", response_model=TokenOut) #리턴 데이터 타입 정의 
 async def login(user: UserLogin, response: Response, db: Session = Depends(get_db)):
     db_user = get_user_by_email(db, user.email)
     if not db_user:
@@ -67,3 +69,9 @@ async def login(user: UserLogin, response: Response, db: Session = Depends(get_d
 
     # JSON 응답도 원하면 이렇게
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+
+@app.get("/me")
+def read_users_me(current_user: models.User = Depends(get_current_user)):
+    return {"email": current_user.email, "id": current_user.id}
