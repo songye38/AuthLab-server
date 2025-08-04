@@ -30,6 +30,7 @@ def get_current_user(request: Request, db: Session = Depends(get_db)):
     )
 
     token = request.cookies.get("access_token")  # ✅ 쿠키에서 꺼냄
+    print("서버가 받은 토큰:", token)  # 여기 꼭 찍어봐
     if not token:
         raise credentials_exception
 
