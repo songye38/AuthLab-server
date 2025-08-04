@@ -62,8 +62,8 @@ async def login(user: UserLogin, response: Response, db: Session = Depends(get_d
         key="access_token",
         value=access_token,
         httponly=True,
-        secure=False,  # HTTPS면 True로 바꿔야 함
-        samesite="lax",
+        secure=False,            # 개발 중엔 False, 배포는 True
+        samesite="none",         # ← 이거! 무조건 "none"
         max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     )
 
