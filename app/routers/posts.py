@@ -12,7 +12,7 @@ router = APIRouter(
 )
 
 
-@router.post("/", status_code=201)
+@router.post("", status_code=201)
 def create_post(
     post: PostCreate,
     current_user: models.User = Depends(get_current_user),
