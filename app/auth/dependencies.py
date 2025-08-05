@@ -9,7 +9,6 @@ from app.db.database import get_db
 import app.db.models as models
 from dotenv import load_dotenv
 import os
-from jwt import ExpiredSignatureError, InvalidTokenError
 
 
 

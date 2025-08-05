@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Response,Request
 from sqlalchemy.orm import Session
 import app.db.models as models
 from app.db.schemas import UserCreate, UserOut, UserLogin, TokenOut
@@ -6,6 +6,18 @@ from app.db.crud import create_user, get_user_by_email, verify_password
 from app.auth.auth import create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES,create_refresh_token,REFRESH_TOKEN_EXPIRE_DAYS
 from app.auth.dependencies import verify_token, get_current_user
 from app.db.database import get_db
+#import jwt
+from datetime import timedelta
+from dotenv import load_dotenv
+import os
+from jose import JWTError, jwt
+
+
+
+load_dotenv()  # 이거 꼭 해줘야 함
+REFRESH_SECRET_KEY = os.getenv("REFRESH_SECRET_KEY")  # .env 파일에서 리프레시 토큰 키 가져오기
+ALGORITHM = "HS256"
+
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -47,6 +59,35 @@ async def login(user: UserLogin, response: Response, db: Session = Depends(get_d
         max_age=REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,  # 예: 7일
     )
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+
+@router.post("/refresh")
+def refresh_token(request: Request, response: Response, db: Session = Depends(get_db)):
+    refresh_token = request.cookies.get("refresh_token")
+    if not refresh_token:
+        raise HTTPException(status_code=401, detail="리프레시 토큰 없음")
+
+    try:
+        payload = jwt.decode(refresh_token, REFRESH_SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="리프레시 토큰 유효하지 않음")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="리프레시 토큰 만료 또는 유효하지 않음")
+
+    # 새 access_token 발급
+    new_access_token = create_access_token(
+        data={"sub": str(user_id)},
+        expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
+
+    response.set_cookie("access_token", new_access_token, httponly=True, secure=True, samesite="none")
+    return {"message": "access token 재발급 완료"}
+
+
+
+
 
 
 @router.post("/logout")
