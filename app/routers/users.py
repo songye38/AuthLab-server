@@ -98,6 +98,12 @@ def logout(response: Response):
         samesite="none",  # 있어도 되고 없어도 됨 (delete에는 영향 적음)
         secure=True
     )
+    response.delete_cookie(
+        key="refresh_token",
+        path="/",
+        samesite="none",  # 있어도 되고 없어도 됨 (delete에는 영향 적음)
+        secure=True
+    )
     return {"msg": "로그아웃 완료"}
 
 @router.get("/me")
