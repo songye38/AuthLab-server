@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 import app.db.models as models
 from app.db.schemas import UserCreate, UserOut, UserLogin, TokenOut
 from app.db.crud import create_user, get_user_by_email, verify_password
-from app.auth.auth import create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
+from app.auth.auth import create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES,create_refresh_token,REFRESH_TOKEN_EXPIRE_DAYS
 from app.auth.dependencies import verify_token, get_current_user
 from app.db.database import get_db
 
@@ -26,6 +26,8 @@ async def login(user: UserLogin, response: Response, db: Session = Depends(get_d
         raise HTTPException(status_code=400, detail="이메일 또는 비밀번호가 틀렸습니다.")
 
     access_token = create_access_token(data={"sub": str(db_user.id)})
+    refresh_token = create_refresh_token(data={"sub": str(db_user.id)})
+    
 
     response.set_cookie(
         key="access_token",
@@ -34,6 +36,15 @@ async def login(user: UserLogin, response: Response, db: Session = Depends(get_d
         secure=True,
         samesite="none",
         max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+    )
+
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        max_age=REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,  # 예: 7일
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
